@@ -42,9 +42,9 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Camera",
+                    "name": "Mouse",
                     "type": "Value",
-                    "id": "dade9a5c-2778-4cf4-90e4-c2472a1e35bc",
+                    "id": "ab92c89a-af4b-466d-b34e-09a4809eda0f",
                     "expectedControlType": "Vector2",
                     "processors": "",
                     "interactions": "",
@@ -110,7 +110,7 @@
                 {
                     "name": "",
                     "id": "415034c8-6256-4797-9b6b-1ac2c2d93cce",
-                    "path": "<Keyboard>/space",
+                    "path": "<Keyboard>/shift",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -132,7 +132,7 @@
                 {
                     "name": "",
                     "id": "f68ce4ba-ff21-49ac-a79e-72f6b9cb3fb5",
-                    "path": "<Keyboard>/shift",
+                    "path": "<Keyboard>/space",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -142,12 +142,12 @@
                 },
                 {
                     "name": "",
-                    "id": "739e40aa-76a7-4551-8124-a66f777f9d0b",
+                    "id": "062701d2-19bf-419a-84e4-6633cf44409f",
                     "path": "<Mouse>/delta",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Camera",
+                    "action": "Mouse",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

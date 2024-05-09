@@ -64,9 +64,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""Camera"",
+                    ""name"": ""Mouse"",
                     ""type"": ""Value"",
-                    ""id"": ""dade9a5c-2778-4cf4-90e4-c2472a1e35bc"",
+                    ""id"": ""ab92c89a-af4b-466d-b34e-09a4809eda0f"",
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
                     ""interactions"": """",
@@ -132,7 +132,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""415034c8-6256-4797-9b6b-1ac2c2d93cce"",
-                    ""path"": ""<Keyboard>/space"",
+                    ""path"": ""<Keyboard>/shift"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -154,7 +154,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""f68ce4ba-ff21-49ac-a79e-72f6b9cb3fb5"",
-                    ""path"": ""<Keyboard>/shift"",
+                    ""path"": ""<Keyboard>/space"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -164,12 +164,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""739e40aa-76a7-4551-8124-a66f777f9d0b"",
+                    ""id"": ""062701d2-19bf-419a-84e4-6633cf44409f"",
                     ""path"": ""<Mouse>/delta"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Camera"",
+                    ""action"": ""Mouse"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -245,7 +245,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_PlayerActions_Boost = m_PlayerActions.FindAction("Boost", throwIfNotFound: true);
         m_PlayerActions_Sprint = m_PlayerActions.FindAction("Sprint", throwIfNotFound: true);
         m_PlayerActions_Jump = m_PlayerActions.FindAction("Jump", throwIfNotFound: true);
-        m_PlayerActions_Camera = m_PlayerActions.FindAction("Camera", throwIfNotFound: true);
+        m_PlayerActions_Mouse = m_PlayerActions.FindAction("Mouse", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -311,7 +311,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_PlayerActions_Boost;
     private readonly InputAction m_PlayerActions_Sprint;
     private readonly InputAction m_PlayerActions_Jump;
-    private readonly InputAction m_PlayerActions_Camera;
+    private readonly InputAction m_PlayerActions_Mouse;
     public struct PlayerActionsActions
     {
         private @PlayerInputActions m_Wrapper;
@@ -320,7 +320,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         public InputAction @Boost => m_Wrapper.m_PlayerActions_Boost;
         public InputAction @Sprint => m_Wrapper.m_PlayerActions_Sprint;
         public InputAction @Jump => m_Wrapper.m_PlayerActions_Jump;
-        public InputAction @Camera => m_Wrapper.m_PlayerActions_Camera;
+        public InputAction @Mouse => m_Wrapper.m_PlayerActions_Mouse;
         public InputActionMap Get() { return m_Wrapper.m_PlayerActions; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -342,9 +342,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Jump.started += instance.OnJump;
             @Jump.performed += instance.OnJump;
             @Jump.canceled += instance.OnJump;
-            @Camera.started += instance.OnCamera;
-            @Camera.performed += instance.OnCamera;
-            @Camera.canceled += instance.OnCamera;
+            @Mouse.started += instance.OnMouse;
+            @Mouse.performed += instance.OnMouse;
+            @Mouse.canceled += instance.OnMouse;
         }
 
         private void UnregisterCallbacks(IPlayerActionsActions instance)
@@ -361,9 +361,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Jump.started -= instance.OnJump;
             @Jump.performed -= instance.OnJump;
             @Jump.canceled -= instance.OnJump;
-            @Camera.started -= instance.OnCamera;
-            @Camera.performed -= instance.OnCamera;
-            @Camera.canceled -= instance.OnCamera;
+            @Mouse.started -= instance.OnMouse;
+            @Mouse.performed -= instance.OnMouse;
+            @Mouse.canceled -= instance.OnMouse;
         }
 
         public void RemoveCallbacks(IPlayerActionsActions instance)
@@ -432,6 +432,6 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         void OnBoost(InputAction.CallbackContext context);
         void OnSprint(InputAction.CallbackContext context);
         void OnJump(InputAction.CallbackContext context);
-        void OnCamera(InputAction.CallbackContext context);
+        void OnMouse(InputAction.CallbackContext context);
     }
 }

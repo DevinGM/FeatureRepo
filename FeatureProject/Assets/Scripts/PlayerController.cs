@@ -1,10 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// Monaghan, Devin
-/// 5/7/2024
+/// 5/8/2024
 /// Handles deathfloor
 /// handles WASD movement
 /// handles jumping
@@ -13,31 +14,50 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    // speed variables
-    public float walkSpeed = 15f;
-    public float sprintSpeed = 50f;
+    // movement speeds
+    public float walkSpeed = 25f;
+    public float sprintSpeed = 40f;
     public float floatSpeed = 20f;
     // gravity speed
-    public float gravitySpeed = 20f;
+    public float gravitySpeed = 15f;
     // power of jump
     public float jumpForce = 20f;
+    // power of boost
+    public float boostForce = 40f;
+    // power of sprint boost
+    public float sprintForce = 5f;
+    // maximum sprint velocity
+    public float sprintMaxVelocity = 50f;
+    // maximum walk velocity
+    public float walkMaxVelocity = 50f;
+    // speed at which treads rotate into position
+    public float treadsSpeed = 10f;
 
     // is the player actively jumping
-    public bool floating = false;
+    private bool floating = false;
     // is the player on the ground
-    public bool onGround = true;
+    private bool onGround = true;
     // is the player sprinting or walking
-    public bool sprinting = false;
+    private bool sprinting = false;
     // is the player actively moving;
-    public bool moving = false;
+    private bool moving = false;
 
     // reference to treads model
-    public GameObject treads;
-
+    [SerializeField] private Transform treads;
+    // reference to head model
+    [SerializeField] private Transform head;
+    // reference to camera
+    [SerializeField] private Transform cam;
     // reference to inputs
     private PlayerInputActions playerInputActions;
     // reference to rigidbody
     private Rigidbody rigidBodyRef;
+
+    // direction holds movement inputs converted into Vector3
+    public Vector3 direction;
+
+    // rotation of head model
+    private Quaternion headRotation;
 
     // Awake is called before the first frame update
     void Awake()
@@ -45,23 +65,18 @@ public class PlayerController : MonoBehaviour
         // get rigidbody reference
         rigidBodyRef = this.GetComponent<Rigidbody>();
 
-        // get inputs
+        // enable inputs
         playerInputActions = new PlayerInputActions();
         playerInputActions.Enable();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        // disallow the player to fall off the map
-        Deathfloor();
-        // check if the player is on the ground or not
-        OnGround();
     }
 
     // handles physics controlled movement
     private void FixedUpdate()
     {
+        // disallow the player to fall off the map
+        Deathfloor();
+        // check if the player is on the ground or not
+        OnGround();
         // move
         Move();
         // jump and float
@@ -70,6 +85,10 @@ public class PlayerController : MonoBehaviour
         Gravity();
         // slow down when not moving
         SlowDown();
+        // boost dodge
+        Boost();
+        // align treads model with move direction and head model with cam rotation
+        ModelAlign();
     }
 
     // get movement inputs
@@ -78,20 +97,64 @@ public class PlayerController : MonoBehaviour
     {
         // get movement input values
         Vector2 vectorWASD = playerInputActions.PlayerActions.MoveWASD.ReadValue<Vector2>();
+        
         // convert Vector2 inputs into a Vector3
-        Vector3 direction = Vector3.zero;
-        direction.x = vectorWASD.x;
-        direction.z = vectorWASD.y;
+     //   direction = new Vector3(vectorWASD.x, 0, vectorWASD.y);
+
+        // create variables holding camera transform values
+        Vector3 camForward = cam.forward;
+        Vector3 camRight = cam.right;
+        // remove y values
+        camForward.y = 0f;
+        camRight.y = 0f;
+        // create variables for relative direction
+        Vector3 forwardRelative = vectorWASD.y * camForward;
+        Vector3 rightRelative = vectorWASD.x * camRight;
+
+        direction = forwardRelative + rightRelative;
+        direction.y = 0f;
 
         // apply force
+        // clamp velocity
         if (Sprinting())
         {
+            // apply force at sprint speed
             rigidBodyRef.AddForce(direction * sprintSpeed * Time.fixedDeltaTime, ForceMode.Impulse);
+
+            // clamp velocity within sprint max velocity
+            rigidBodyRef.velocity = new Vector3(Mathf.Clamp(rigidBodyRef.velocity.x, -sprintMaxVelocity, sprintMaxVelocity),
+                rigidBodyRef.velocity.y, rigidBodyRef.velocity.z);
+            rigidBodyRef.velocity = new Vector3(rigidBodyRef.velocity.x,
+                Mathf.Clamp(rigidBodyRef.velocity.y, -sprintMaxVelocity, sprintMaxVelocity), rigidBodyRef.velocity.z);
+            rigidBodyRef.velocity = new Vector3(rigidBodyRef.velocity.x, rigidBodyRef.velocity.y,
+                Mathf.Clamp(rigidBodyRef.velocity.z, -sprintMaxVelocity, sprintMaxVelocity));
         }
         else
         {
+            // apply force at walk speed
             rigidBodyRef.AddForce(direction * walkSpeed * Time.fixedDeltaTime, ForceMode.Impulse);
-        }
+
+            // clamp velocity within walk max velocity
+            rigidBodyRef.velocity = new Vector3(Mathf.Clamp(rigidBodyRef.velocity.x, -walkMaxVelocity, walkMaxVelocity),
+                rigidBodyRef.velocity.y, rigidBodyRef.velocity.z);
+            rigidBodyRef.velocity = new Vector3(rigidBodyRef.velocity.x,
+                Mathf.Clamp(rigidBodyRef.velocity.y, -walkMaxVelocity, walkMaxVelocity), rigidBodyRef.velocity.z);
+            rigidBodyRef.velocity = new Vector3(rigidBodyRef.velocity.x, rigidBodyRef.velocity.y,
+                Mathf.Clamp(rigidBodyRef.velocity.z, -walkMaxVelocity, walkMaxVelocity));
+        }        
+    }
+
+    // rotate treads model with direction
+    // align head model with camera
+    private void ModelAlign()
+    {
+        // make treads model look in direction player is heading
+        treads.forward = new Vector3(direction.x, 0f, direction.z);
+
+        // set storage variable to a Quaternion using cam.
+        headRotation = Quaternion.Euler(0f, cam.rotation.eulerAngles.y, 0f);
+        // set head model rotation to headRotation variable
+        head.rotation = headRotation;
     }
 
     // when player is not moving rapidly slow down
@@ -127,7 +190,8 @@ public class PlayerController : MonoBehaviour
     }
 
     // get sprint input
-    // when player starts sprinting enter sprinting state
+    // when player presses control start sprinting
+    // when player starts sprinting enter sprinting state signified with sprinting bool
     // when player stops inputting movements exit sprinting state
     // return true in springting state and false out of sprinting state
     private bool Sprinting()
@@ -139,6 +203,7 @@ public class PlayerController : MonoBehaviour
         if (playerInputActions.PlayerActions.Sprint.WasPerformedThisFrame())
         {
             sprinting = true;
+            rigidBodyRef.AddForce(treads.forward * sprintForce, ForceMode.Impulse);
         }
         // if player stops movement stop sprinting
         if (vectorWASD == Vector2.zero)
@@ -157,14 +222,10 @@ public class PlayerController : MonoBehaviour
         if (Physics.Raycast(transform.position, Vector3.down, out hit, 1.6f))
         {
             onGround = true;
-            Debug.DrawLine(transform.position, new Vector3(transform.position.x, -1f * hit.distance, transform.position.z),
-                Color.red);
         }
         else
         {
             onGround = false;
-            Debug.DrawLine(transform.position, new Vector3(transform.position.x, -1f * hit.distance, transform.position.z),
-                Color.red);
         }
     }
 
@@ -185,17 +246,28 @@ public class PlayerController : MonoBehaviour
         // if the player is on the ground and presses the spacebar, jump
         if (onGround && playerInputActions.PlayerActions.Jump.WasPerformedThisFrame())
         {
-            rigidBodyRef.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            rigidBodyRef.AddForce(treads.up * jumpForce, ForceMode.Impulse);
         }
         // if the player is not on the ground and holds space bar, continuosly provide small lift
         if (playerInputActions.PlayerActions.Jump.IsPressed())
         {
-            rigidBodyRef.AddForce(Vector3.up * floatSpeed * Time.fixedDeltaTime, ForceMode.Impulse);
+            rigidBodyRef.AddForce(treads.up * floatSpeed * Time.fixedDeltaTime, ForceMode.Impulse);
             floating = true;
         }
         else
         {
             floating = false;
+        }
+    }
+
+    // get boost inputs
+    // if player presses space apply a force forwards
+    private void Boost()
+    {
+        // if the player is on the ground and presses shift, boost
+        if (playerInputActions.PlayerActions.Boost.WasPerformedThisFrame())
+        {
+            rigidBodyRef.AddForce(treads.forward * boostForce, ForceMode.Impulse);
         }
     }
 
@@ -205,9 +277,9 @@ public class PlayerController : MonoBehaviour
         if (transform.position.y <= -15)
         {
             // reset position to origin
-            transform.position = new Vector3(0f, 0f, 0f);
+            transform.position = Vector3.zero;
             // reset rotation
-            transform.rotation = new Quaternion(0f, 0f, 0f, 0f);
+            transform.rotation = Quaternion.Euler(Vector3.zero);
             // reset momentum
             rigidBodyRef.velocity = Vector3.zero;
             print("player died");

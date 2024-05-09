@@ -1,64 +1,68 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// Monaghan, Devin
-/// 5/7/2024
-/// Project Notes
+/// 5/8/2024
+/// camera is controlled by mouse & looks at player
 /// </summary>
 
 public class Cam : MonoBehaviour
 {
+    // distance of camera from player on z axis
+    public float distanceZ = 13f;
+    // distance of camera from player on y axis
+    public float distanceY = -5f;
+    // sensitivity of x axis of mouse
+    public float sensitivityX = 5f;
+    // sensitivity of y axis of mouse
+    public float sensitivityY = 4f;
+
+    // reference to player
+    [SerializeField] private Transform player;
+
     // reference to inputs
     private PlayerInputActions playerInputActions;
-    
-    // reference to player
-    public GameObject player;
+
+    // current x value of cam
+    private float currentX = 0f;
+    // current y value of cam
+    private float currentY = 0f;
+    // minimum allowed y value
+    private const float minY = -40f;
+    // maximum allowed y value
+    private const float maxY = 30f;
 
     // Awake is called before the first frame update
-    void Awake()
+    private void Awake()
     {
+        // set cursor invisible
+        Cursor.visible = false;
+
         // get inputs
         playerInputActions = new PlayerInputActions();
         playerInputActions.Enable();
     }
 
-    private void OnEnable()
-    {
-        transform.LookAt(player.GetComponent<Transform>().position);
-    }
-
-
-
-
-
-
-    private const float YMin = -50.0f;
-    private const float YMax = 50.0f;
-
-    public Transform lookAt;
-
-    public Transform Player;
-
-    public float distance = 10.0f;
-    private float currentX = 0.0f;
-    private float currentY = 0.0f;
-    public float sensivity = 4.0f;
-
     // Update is called once per frame
     void LateUpdate()
     {
+        // put inputs in mouse variable
+        Vector2 mouse = playerInputActions.PlayerActions.Mouse.ReadValue<Vector2>();
+        // set current x and y with inputs and sensitivity
+        currentX += mouse.x * sensitivityX * Time.deltaTime;
+        currentY += mouse.y * sensitivityY * Time.deltaTime;
 
-        currentX += Input.GetAxis("Mouse X") * sensivity * Time.deltaTime;
-        currentY += Input.GetAxis("Mouse Y") * sensivity * Time.deltaTime;
+        // clamp current y value betwen min and max y value
+        currentY = Mathf.Clamp(currentY, minY, maxY);
 
-        currentY = Mathf.Clamp(currentY, YMin, YMax);
+        Vector3 direction = new Vector3(0f, -distanceY, -distanceZ);
+        Quaternion rotation = Quaternion.Euler(currentY, currentX, 0f);
+        transform.position = player.position + rotation * direction;
 
-        Vector3 Direction = new Vector3(0, 0, -distance);
-        Quaternion rotation = Quaternion.Euler(currentY, currentX, 0);
-        transform.position = lookAt.position + rotation * Direction;
-
-        transform.LookAt(lookAt.position);
+        // make camera look at player
+        transform.LookAt(player.position);
     }
 }
